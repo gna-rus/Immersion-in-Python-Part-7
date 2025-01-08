@@ -1,0 +1,17 @@
+import os
+
+
+def generate_text_files(nums, directory):
+    """Функция создает nums пустых файлов
+    Принимает: количество создаваемых файлов и дирректорию в которой надо создать файлы"""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for i in range(1, nums + 1):
+        filename = f'{directory}/file{i}.txt'
+        with open(filename, 'w') as file:
+            file.write(' ')
+
+# Пример использования:
+nums = 5
+directory = './files'
+generate_text_files(nums, directory)
