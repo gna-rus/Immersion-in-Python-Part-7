@@ -1,27 +1,73 @@
+"""
+1. Напишите функцию группового переименования файлов. Она должна:
+a. принимать параметр желаемое конечное имя файлов. При переименовании в конце имени добавляется порядковый номер.
+b. принимать параметр количество цифр в порядковом номере.
+c. принимать параметр расширение исходного файла. Переименование должно работать только для этих файлов внутри каталога.
+d. принимать параметр расширение конечного файла.
+e. принимать диапазон сохраняемого оригинального имени. Например для диапазона [3, 6] берутся буквы с 3 по 6 из исходного имени файла. К ним прибавляется желаемое конечное имя, если оно передано. Далее счётчик файлов и расширение.
+"""
+
+"""
+!!! Программа запускается через командную строку
+
+Для начала надо провести генерацию  перечня пустых файлов. Пример команды:
+   python task1.py 'name' -num 4 --gen 
+где name - это базовое имя файлов (name1, name2, name3...)
+--gen  - флаг сигнализирующий что необходимо провести именно что генерацию пустых файлов
+-num - устанавливает размерность счетчика (можно не указывать, по умолчанию это 1)
+
+После чего проводим переименовывание файлов. Пример команды:
+    python task1.py 'new_name_'
+где 'new_name_' - это новое имя файлов
+
+Код оптимизирован только под условия что все файлы имеют одинаковую основу в наименовании и отличаются только счетчиком
+"""
+
 import os
+import argparse
+
 
 
 def generate_text_files(name_gen, nums, directory, ext):
     """Функция создает nums пустых файлов
-    Принимает: количество создаваемых файлов и дирректорию в которой надо создать файлы"""
+    Принимает: базовое имя файла,
+               количество создаваемых файлов,
+               дирректорию в которой надо создать файлы,
+               расширение файлов"""
     if not os.path.exists(directory):
         os.makedirs(directory)
     for i in range(1, nums + 1):
         filename = f'{directory}/{name_gen}{i}.{ext}'
         with open(filename, 'w') as file:
             file.write(' ')
+        print('Файл создан')
 
 
-def rename_files(directory, new_name, num_digits, src_ext, dst_ext, range_word, old_name):
+
+def rename_files(directory, new_name, num_digits, src_ext, dst_ext,  range_word):
+    """Функция переименования всех файлов в дирректории
+    Принимает: дирректорию с файлами которые надо переименовать,
+               новое имя файла,
+               количество цифр в нумерации файлов,
+               старое расширение файлов,
+               новое расширение файлов,
+               старое имя файлов в директории,
+               диапазон символов из старого имени файлов
+               """
     # Получаем список всех файлов в каталоге с указанным расширением
     files = [f for f in os.listdir(directory) if f.endswith(src_ext)]
     print(f"Файлы в папке {directory}: \n{files}")
+    if len(files)==0:
+        print('Дирректория пуста')
+        return
 
 
     # Сортировка по имени файла для корректной нумерации
     files.sort()
 
     # Форматируем строку для добавления номера
+    old_name = files[0].split('.')[0][:-1] # определяю самый первый файлы из списка, а так ка у него номерация всегда "1" то просто отсекаю лишнее
+
     part_of_old_name = old_name[range_word[0]: range_word[1]]
 
     format_str = f'{part_of_old_name}{new_name}-{{0:0{num_digits}d}}.{dst_ext}'
@@ -39,25 +85,45 @@ def rename_files(directory, new_name, num_digits, src_ext, dst_ext, range_word, 
             print(f"ERROR! {old_path} -> {new_path}: {e}")
 
 
-nums = 5 # Количество создаваемых файлов
-name_gen = 'file_'
-dir = './files' # Дирректория в которой будут созданы файлы
-ext = 'txt' # Формат создаваемых файлов
 
-generate_text_files(name_gen, nums, dir, ext) # Генерирую файлы в папке
+# Основная программа
+if __name__ == "__main__":
+    """Код начинает работать от сюда"""
+    # Чтение координат ферзей из аргументов командной строки
+    parser = argparse.ArgumentParser()
 
-digits = 4 # Количество цифр в номере создаваемых файлов
-name = 'my_file' # Новое имя для файлов
-new_ext = 'png' # Новый формат файла
-range = [1,3]
+    parser.add_argument('name_file', type=str, help="Имя файлов")
+    parser.add_argument('--gen', action='store_true', help="Генератор файлов")
+    parser.add_argument('-num', '--num', type=int, default=1,
+                        help='Количество создаваемых файлов')
 
-# Переименовываю файлы в папке
-rename_files(
-    directory=dir,
-    new_name=name,
-    num_digits=digits,
-    src_ext=ext,
-    dst_ext=new_ext,
-    range_word=range,
-    old_name=name_gen
-)
+    args = parser.parse_args()
+
+    dir = './files'  # Дирректория в которой будут созданы файлы
+    ext = 'txt'  # Формат создаваемых файлов
+
+
+    # условия для генерации новых файлов
+    if args.name_file != None and args.gen==True:
+        nums = args.num # Количество создаваемых файлов
+        name_gen = args.name_file
+
+        generate_text_files(name_gen, nums, dir, ext) # Генерирую файлы в папке
+
+    elif args.name_file != None and args.gen==False:
+        digits = 4 # Количество цифр в номере создаваемых файлов
+        name = args.name_file # Новое имя для файлов
+        new_ext = 'png' # Новый формат файла
+        range = [1,3]
+
+        # Переименовываю файлы в папке
+        rename_files(
+            directory=dir,
+            new_name=name,
+            num_digits=digits,
+            src_ext=ext,
+            dst_ext=new_ext,
+            range_word=range
+        )
+
+
