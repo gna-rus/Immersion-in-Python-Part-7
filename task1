@@ -89,7 +89,7 @@ def rename_files(directory, new_name, num_digits, src_ext, dst_ext,  range_word)
 # Основная программа
 if __name__ == "__main__":
     """Код начинает работать от сюда"""
-    # Чтение координат ферзей из аргументов командной строки
+    
     parser = argparse.ArgumentParser()
 
     parser.add_argument('name_file', type=str, help="Имя файлов")
